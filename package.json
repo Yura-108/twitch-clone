@@ -1,0 +1,38 @@
+{
+  "name": "twitch",
+  "version": "1.0.0",
+  "description": "Full-stack Twitch clone — NestJS + GraphQL + Prisma backend, Next.js frontend",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"yarn dev:api\" \"yarn dev:web\"",
+    "dev:api": "yarn workspace @twitch/backend start:dev",
+    "dev:web": "yarn workspace @twitch/frontend dev",
+    "build": "yarn workspace @twitch/backend build && yarn workspace @twitch/frontend build",
+    "start:api": "yarn workspace @twitch/backend start:prod",
+    "start:web": "yarn workspace @twitch/frontend start",
+    "lint": "yarn workspaces run lint",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,js,mjs,json,css,md}\"",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,js,mjs,json,css,md}\"",
+    "db:generate": "yarn workspace @twitch/backend db:generate",
+    "db:push": "yarn workspace @twitch/backend db:push",
+    "db:migrate": "yarn workspace @twitch/backend db:migrate",
+    "db:studio": "yarn workspace @twitch/backend db:studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:reset": "docker compose down -v && docker compose up -d"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "concurrently": "^10.0.4",
+    "dotenv-cli": "^11.0.0",
+    "prettier": "^3.9.6"
+  }
+}

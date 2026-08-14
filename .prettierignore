@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.next
+out
+coverage
+apps/backend/generated
+apps/backend/media
+apps/backend/src/core/graphql/schema.gql
+apps/backend/skills-lock.json
+yarn.lock
+.claude
+.agents
+.windsurf

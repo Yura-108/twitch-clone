@@ -1,0 +1,17 @@
+# Normalize all text files to LF in the repository and on checkout.
+# Keeps diffs clean across Windows/macOS/Linux and matches .editorconfig.
+* text=auto eol=lf
+
+# Generated / vendored — collapse in diffs and reviews.
+yarn.lock -diff linguist-generated
+apps/backend/src/core/graphql/schema.gql linguist-generated
+
+# Binary assets — never touch line endings.
+*.webp binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

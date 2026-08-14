@@ -1,0 +1,49 @@
+services:
+  db:
+    container_name: twitch-postgres
+    image: postgres:18.4
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # Without this the database from POSTGRES_DATABASE is never created.
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+    ports:
+      # Host port comes from .env so POSTGRES_URI and the mapping cannot drift.
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      # postgres:18+ stores data in major-version-named subdirectories, so the
+      # mount goes at /var/lib/postgresql — NOT /var/lib/postgresql/data
+      # (correct for <=17) and NOT /var/lib/postgres (never correct).
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - twitch
+
+  redis:
+    container_name: twitch-redis
+    image: redis:8.2-alpine
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - twitch
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  twitch:
