@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import type { User } from '@prisma/generated/client';
 import type { Request } from 'express';
 
+import { getSessionCookieOptions } from '@/src/core/config/session.config';
 import type { SessionMetadata } from '@/src/shared/types/session-metadata.types';
 
 export function saveSession(
@@ -32,9 +33,22 @@ export function destroySession(req: Request, configService: ConfigService) {
 				return reject(new InternalServerErrorException("Couldn't end session"));
 			}
 
-			req.res?.clearCookie(configService.getOrThrow<string>('SESSION_NAME'));
+			clearSessionCookie(req, configService);
 
 			resolve(true);
 		});
 	});
+}
+
+export function clearSessionCookie(req: Request, configService: ConfigService) {
+	// Same domain/path the cookie was created with — a clearing header that
+	// differs on either targets a different cookie and leaves the real one
+	// alone. Harmless on localhost, where they coincide; not once
+	// SESSION_DOMAIN becomes a parent domain.
+	const { maxAge, ...options } = getSessionCookieOptions(configService);
+
+	req.res?.clearCookie(
+		configService.getOrThrow<string>('SESSION_NAME'),
+		options
+	);
 }

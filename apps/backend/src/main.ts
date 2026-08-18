@@ -7,11 +7,10 @@ import { config } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import session from 'express-session';
 
+import { getSessionCookieOptions } from '@/src/core/config/session.config';
 import { RedisService } from '@/src/core/redis/redis.service';
-import { parseBoolean } from '@/src/shared/utils/parse-boolean.util';
 
 import { CoreModule } from './core/core.module';
-import { ms, type StringValue } from './shared/utils/ms.util';
 
 // Scripts run with cwd = apps/backend (yarn workspaces), so the single
 // source-of-truth .env at the monorepo root is two levels up.
@@ -38,13 +37,7 @@ async function bootstrap() {
 			name: config.getOrThrow<string>('SESSION_NAME'),
 			resave: false,
 			saveUninitialized: false,
-			cookie: {
-				domain: config.getOrThrow<string>('SESSION_DOMAIN'),
-				maxAge: ms(config.getOrThrow<StringValue>('SESSION_MAX_AGE')),
-				httpOnly: parseBoolean(config.getOrThrow<string>('SESSION_HTTP_ONLY')),
-				secure: parseBoolean(config.getOrThrow<string>('SESSION_SECURE')),
-				sameSite: 'lax'
-			},
+			cookie: getSessionCookieOptions(config),
 			store: new RedisStore({
 				client: redis,
 				prefix: config.getOrThrow<string>('SESSION_FOLDER')

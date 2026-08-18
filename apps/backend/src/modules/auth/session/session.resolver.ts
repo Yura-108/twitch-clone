@@ -39,4 +39,16 @@ export class SessionResolver {
 	public async logout(@Context() { req }: GqlContext) {
 		return this.sessionService.logout(req);
 	}
+
+	@Authorization()
+	@Mutation(() => Boolean, { name: 'clearSessionCookie' })
+	public async clearSession(@Context() { req }: GqlContext) {
+		return this.sessionService.clearSession(req);
+	}
+
+	@Authorization()
+	@Mutation(() => Boolean, { name: 'removeSession' })
+	public async remove(@Context() { req }: GqlContext, @Args('id') id: string) {
+		return this.sessionService.removeSession(req, id);
+	}
 }

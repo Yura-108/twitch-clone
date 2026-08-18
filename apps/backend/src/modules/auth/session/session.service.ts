@@ -1,4 +1,5 @@
 import {
+	ConflictException,
 	Injectable,
 	NotFoundException,
 	UnauthorizedException
@@ -14,7 +15,11 @@ import { LoginInput } from '@/src/modules/auth/session/inputs/login.input';
 import { SessionModel } from '@/src/modules/auth/session/models/session.model';
 import type { StoredSession } from '@/src/shared/types/session.types';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata.util';
-import { destroySession, saveSession } from '@/src/shared/utils/session.util';
+import {
+	clearSessionCookie,
+	destroySession,
+	saveSession
+} from '@/src/shared/utils/session.util';
 
 @Injectable()
 export class SessionService {
@@ -99,6 +104,31 @@ export class SessionService {
 
 	public async logout(req: Request): Promise<boolean> {
 		return destroySession(req, this.configService);
+	}
+
+	public async clearSession(req: Request): Promise<boolean> {
+		clearSessionCookie(req, this.configService);
+
+		return true;
+	}
+
+	public async removeSession(req: Request, id: string): Promise<boolean> {
+		if (req.session.id === id) {
+			throw new ConflictException('The current session cannot be deleted');
+		}
+
+		const key = this.sessionPrefix + id;
+
+		const raw = await this.redisService.get(key);
+		const session = raw && this.toSessionModel(key, raw);
+
+		if (!session || session.userId !== req.session.userId) {
+			throw new NotFoundException('Session not found');
+		}
+
+		await this.redisService.del(key);
+
+		return true;
 	}
 
 	private get sessionPrefix(): string {

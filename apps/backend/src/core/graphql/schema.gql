@@ -32,9 +32,11 @@ input LoginInput {
 }
 
 type Mutation {
+  clearSessionCookie: Boolean!
   createUser(data: CreateUserInput!): Boolean!
   loginUser(data: LoginInput!): UserModel!
   logoutUser: Boolean!
+  removeSession(id: String!): Boolean!
 }
 
 type Query {
