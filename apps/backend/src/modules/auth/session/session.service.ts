@@ -1,24 +1,79 @@
 import {
 	Injectable,
-	InternalServerErrorException,
 	NotFoundException,
 	UnauthorizedException
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { User } from '@prisma/generated/client';
 import { verify } from 'argon2';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 import { PrismaService } from '@/src/core/prisma/prisma.service';
+import { RedisService } from '@/src/core/redis/redis.service';
 import { LoginInput } from '@/src/modules/auth/session/inputs/login.input';
+import { SessionModel } from '@/src/modules/auth/session/models/session.model';
+import type { StoredSession } from '@/src/shared/types/session.types';
+import { getSessionMetadata } from '@/src/shared/utils/session-metadata.util';
+import { destroySession, saveSession } from '@/src/shared/utils/session.util';
 
 @Injectable()
 export class SessionService {
-	constructor(
+	public constructor(
 		private readonly prismaService: PrismaService,
-		private readonly configService: ConfigService
+		private readonly configService: ConfigService,
+		private readonly redisService: RedisService
 	) {}
 
-	public async login(req: Request, input: LoginInput) {
+	public async findByUser(req: Request): Promise<SessionModel[]> {
+		const userId = req.session.userId;
+
+		if (!userId) {
+			throw new NotFoundException('User not found');
+		}
+
+		const prefix = this.sessionPrefix;
+		const keys = await this.redisService.keys(`${prefix}*`);
+
+		const sessions: SessionModel[] = [];
+
+		for (const key of keys) {
+			const raw = await this.redisService.get(key);
+
+			if (!raw) {
+				continue;
+			}
+
+			const session = this.toSessionModel(key, raw);
+
+			if (session?.userId === userId) {
+				sessions.push(session);
+			}
+		}
+
+		sessions.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+
+		return sessions.filter(session => session.id !== req.session.id);
+	}
+
+	public async findCurrent(req: Request): Promise<SessionModel> {
+		const key = `${this.sessionPrefix}${req.session.id}`;
+
+		const raw = await this.redisService.get(key);
+
+		const session = raw && this.toSessionModel(key, raw);
+
+		if (!session) {
+			throw new NotFoundException('Session not found');
+		}
+
+		return session;
+	}
+
+	public async login(
+		req: Request,
+		input: LoginInput,
+		userAgent: string
+	): Promise<User> {
 		const { login, password } = input;
 
 		const user = await this.prismaService.user.findFirst({
@@ -37,34 +92,31 @@ export class SessionService {
 			throw new UnauthorizedException('Invalid password');
 		}
 
-		return new Promise((resolve, reject) => {
-			req.session.createdAt = new Date();
-			req.session.userId = user.id;
+		const metadata = getSessionMetadata(req, userAgent);
 
-			req.session.save(err => {
-				if (err) {
-					console.log(err);
-					return reject(new InternalServerErrorException('No saved session'));
-				}
-
-				resolve(user);
-			});
-		});
+		return saveSession(req, user, metadata);
 	}
 
-	public async logout(req: Request) {
-		return new Promise((resolve, reject) => {
-			req.session.destroy(err => {
-				if (err) {
-					return reject(
-						new InternalServerErrorException('No destroyed session')
-					);
-				}
-				req.res?.clearCookie(
-					this.configService.getOrThrow<string>('SESSION_NAME')
-				);
-				resolve(true);
-			});
-		});
+	public async logout(req: Request): Promise<boolean> {
+		return destroySession(req, this.configService);
+	}
+
+	private get sessionPrefix(): string {
+		return this.configService.getOrThrow<string>('SESSION_FOLDER');
+	}
+
+	private toSessionModel(key: string, raw: string): SessionModel | null {
+		const session = JSON.parse(raw) as StoredSession;
+
+		if (!session.userId || !session.createdAt || !session.metadata) {
+			return null;
+		}
+
+		return {
+			id: key.slice(this.sessionPrefix.length),
+			userId: session.userId,
+			createdAt: session.createdAt,
+			metadata: session.metadata
+		};
 	}
 }
