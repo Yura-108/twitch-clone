@@ -59,9 +59,11 @@ export class VerificationService {
 		return saveSession(req, user, metadata);
 	}
 
-	public async sendVerificationToken(user: User) {
-		const verificationToken = generateToken(this.prismaService, user, TokenType.EMAIL_VERIFY);
+	public async sendVerificationToken(user: User): Promise<boolean> {
+		const verificationToken = await generateToken(this.prismaService, user, TokenType.EMAIL_VERIFY);
 
-		return verificationToken;
+		await this.mailService.sendVerificationToken(user.email, verificationToken.token);
+
+		return true;
 	}
 }
