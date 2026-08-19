@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { User } from '@prisma/generated/client';
 import { TokenType } from '@prisma/generated/enums';
 import type { Request } from 'express';
 
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { VerificationInput } from '@/src/modules/auth/verification/inputs/verification.input';
 import { MailService } from '@/src/modules/libs/mail/mail.service';
+import { generateToken } from '@/src/shared/utils/generate-token.util';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata.util';
 import { saveSession } from '@/src/shared/utils/session.util';
-import type {User} from "@prisma/generated/client";
-import {generateToken} from "@/src/shared/utils/generate-token.util";
 
 @Injectable()
 export class VerificationService {
@@ -22,10 +22,10 @@ export class VerificationService {
 		input: VerificationInput,
 		userAgent: string
 	) {
-		const {token} = input;
+		const { token } = input;
 
 		const existingToken = await this.prismaService.token.findUnique({
-			where: {token, type: TokenType.EMAIL_VERIFY}
+			where: { token, type: TokenType.EMAIL_VERIFY }
 		});
 
 		if (!existingToken) {
@@ -60,9 +60,16 @@ export class VerificationService {
 	}
 
 	public async sendVerificationToken(user: User): Promise<boolean> {
-		const verificationToken = await generateToken(this.prismaService, user, TokenType.EMAIL_VERIFY);
+		const verificationToken = await generateToken(
+			this.prismaService,
+			user,
+			TokenType.EMAIL_VERIFY
+		);
 
-		await this.mailService.sendVerificationToken(user.email, verificationToken.token);
+		await this.mailService.sendVerificationToken(
+			user.email,
+			verificationToken.token
+		);
 
 		return true;
 	}

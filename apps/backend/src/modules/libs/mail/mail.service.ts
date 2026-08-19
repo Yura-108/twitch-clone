@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { render } from 'react-email';
 
 import { VerificationTemplate } from '@/src/modules/libs/mail/templates/verification.template';
+import {SessionMetadata} from "@/src/shared/types/session-metadata.types";
 
 @Injectable()
 export class MailService {
@@ -13,14 +14,20 @@ export class MailService {
 	) {}
 
 	public async sendVerificationToken(email: string, token: string) {
-		// Trailing slash stripped here so the template can always join with '/'
-		// regardless of how ALLOWED_ORIGIN happens to be written.
 		const domain = this.configService
 			.getOrThrow<string>('ALLOWED_ORIGIN')
 			.replace(/\/$/, '');
 		const html = await render(VerificationTemplate({ domain, token }));
 
 		return this.sendMail(email, 'verification account', html);
+	}
+
+	public async sendPasswordResetToken(
+		email: string,
+		token: string,
+		metadata: SessionMetadata
+	) {
+
 	}
 
 	private sendMail(email: string, subject: string, html: string) {
