@@ -6,7 +6,7 @@ import { TOTP } from 'otpauth';
 import * as QRCode from 'qrcode';
 
 import { PrismaService } from '@/src/core/prisma/prisma.service';
-import { EnableTotpInput } from '@/src/modules/auth/totp/totp/inputs/enable-totp.input';
+import { EnableTotpInput } from '@/src/modules/auth/totp/inputs/enable-totp.input';
 
 @Injectable()
 export class TotpService {

@@ -1,16 +1,16 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import type { User } from '@prisma/generated/client';
 
-import { EnableTotpInput } from '@/src/modules/auth/totp/totp/inputs/enable-totp.input';
+import { EnableTotpInput } from '@/src/modules/auth/totp/inputs/enable-totp.input';
+import { TotpModel } from '@/src/modules/auth/totp/models/totp.model';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
 import { Authorized } from '@/src/shared/decorators/authorized.decorator';
 
 import { TotpService } from './totp.service';
-import {TotpModel} from "@/src/modules/auth/totp/totp/models/totp.model";
 
-@Resolver('Totp')
+@Resolver(() => TotpModel)
 export class TotpResolver {
-	constructor(private readonly totpService: TotpService) {}
+	public constructor(private readonly totpService: TotpService) {}
 
 	@Authorization()
 	@Mutation(() => TotpModel, { name: 'generateTotp' })
@@ -18,6 +18,7 @@ export class TotpResolver {
 		return this.totpService.generate(user);
 	}
 
+	@Authorization()
 	@Mutation(() => Boolean, { name: 'enableTotp' })
 	public async enable(
 		@Authorized() user: User,
@@ -26,6 +27,7 @@ export class TotpResolver {
 		return this.totpService.enable(user, input);
 	}
 
+	@Authorization()
 	@Mutation(() => Boolean, { name: 'disableTotp' })
 	public async disable(@Authorized() user: User) {
 		return this.totpService.disable(user);
