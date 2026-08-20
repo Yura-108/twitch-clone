@@ -22,6 +22,8 @@ import {
 	destroySession,
 	saveSession
 } from '@/src/shared/utils/session.util';
+import {TOTP} from "otpauth";
+import {AuthModel} from "@/src/modules/auth/account/models/auth.model";
 
 @Injectable()
 export class SessionService {
@@ -81,8 +83,8 @@ export class SessionService {
 		req: Request,
 		input: LoginInput,
 		userAgent: string
-	): Promise<User> {
-		const { login, password } = input;
+	){
+		const { login, password, pin } = input;
 
 		const user = await this.prismaService.user.findFirst({
 			where: {
@@ -106,6 +108,28 @@ export class SessionService {
 			throw new BadRequestException(
 				'Account is not verified. Please check your email address.'
 			);
+		}
+
+		if (user.isTotpEnabled && user.totpSecret) {
+			if (!pin) {
+				return {
+					message: 'Необходим код для завершения авторизации'
+				}
+			}
+
+			const totp = new TOTP({
+				issuer: 'Twitch',
+				label: `${user.email}`,
+				algorithm: 'SHA1',
+				digits: 6,
+				secret: user.totpSecret
+			});
+
+			const delta = totp.validate({ token: pin })
+
+			if (delta === null) {
+				throw new BadRequestException('Неверный код')
+			}
 		}
 
 		const metadata = getSessionMetadata(req, userAgent);

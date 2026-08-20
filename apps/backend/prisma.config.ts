@@ -12,6 +12,9 @@ export default defineConfig({
 		path: 'prisma/migrations'
 	},
 	datasource: {
-		url: env('POSTGRES_URI')
+		url: env('POSTGRES_URI'),
+		// Needed whenever Prisma has to replay the migration history to compare
+		// it against the schema — `migrate dev` and `migrate diff --from-migrations`.
+		shadowDatabaseUrl: env('POSTGRES_SHADOW_URI')
 	}
 });

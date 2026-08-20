@@ -1,4 +1,8 @@
-import {Injectable, NotAcceptableException, NotFoundException} from '@nestjs/common';
+import {
+	Injectable,
+	NotAcceptableException,
+	NotFoundException
+} from '@nestjs/common';
 import { TokenType } from '@prisma/generated/enums';
 import { hash } from 'argon2';
 import { Request } from 'express';
@@ -6,18 +10,18 @@ import { Request } from 'express';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { NewPasswordInput } from '@/src/modules/auth/password-recovery/inputs/new-password.input';
 import { ResetPasswordInput } from '@/src/modules/auth/password-recovery/inputs/reset-password.input';
+import { MailService } from '@/src/modules/libs/mail/mail.service';
+import { generateToken } from '@/src/shared/utils/generate-token.util';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata.util';
-import {generateToken} from "@/src/shared/utils/generate-token.util";
-import {MailService} from "@/src/modules/libs/mail/mail.service";
 
 @Injectable()
 export class PasswordRecoveryService {
 	public constructor(
 		private readonly prismaService: PrismaService,
-		private readonly mailService: MailService,
+		private readonly mailService: MailService
 	) {}
 
-	public async ResetPassword(
+	public async resetPassword(
 		req: Request,
 		input: ResetPasswordInput,
 		userAgent: string
@@ -38,9 +42,13 @@ export class PasswordRecoveryService {
 			TokenType.PASSWORD_RESET
 		);
 
-		const metadata= getSessionMetadata(req, userAgent);
+		const metadata = getSessionMetadata(req, userAgent);
 
-		await this.mailService.sendPasswordResetToken(email, resetToken.token, metadata);
+		await this.mailService.sendPasswordResetToken(
+			email,
+			resetToken.token,
+			metadata
+		);
 
 		return true;
 	}
@@ -74,7 +82,7 @@ export class PasswordRecoveryService {
 		await this.prismaService.token.delete({
 			where: {
 				id: existingToken.id,
-				type: TokenType.EMAIL_VERIFY
+				type: TokenType.PASSWORD_RESET
 			}
 		});
 
