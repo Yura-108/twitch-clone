@@ -10,6 +10,7 @@ import { MailModule } from '@/src/modules/libs/mail/mail.module';
 import { IS_DEV_ENV } from '@/src/shared/utils/is-dev.utils';
 
 import { RedisModule } from './redis/redis.module';
+import {CronModule} from "@/src/modules/cron/cron.module";
 
 @Module({
 	imports: [
@@ -26,7 +27,8 @@ import { RedisModule } from './redis/redis.module';
 		PrismaModule,
 		RedisModule,
 		MailModule,
-		AuthModule
+		AuthModule,
+		CronModule
 	]
 })
 export class CoreModule {}
