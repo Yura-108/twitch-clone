@@ -41,10 +41,6 @@ export function destroySession(req: Request, configService: ConfigService) {
 }
 
 export function clearSessionCookie(req: Request, configService: ConfigService) {
-	// Same domain/path the cookie was created with — a clearing header that
-	// differs on either targets a different cookie and leaves the real one
-	// alone. Harmless on localhost, where they coincide; not once
-	// SESSION_DOMAIN becomes a parent domain.
 	const { maxAge, ...options } = getSessionCookieOptions(configService);
 
 	req.res?.clearCookie(

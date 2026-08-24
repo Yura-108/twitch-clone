@@ -14,8 +14,6 @@ export class PasswordRecoveryResolver {
 		private readonly passwordRecoveryService: PasswordRecoveryService
 	) {}
 
-	// No @Authorization(): recovery exists precisely for people who cannot log
-	// in, so requiring a session would lock out everyone it is meant for.
 	@Mutation(() => Boolean, { name: 'resetPassword' })
 	public async resetPassword(
 		@Context() { req }: GqlContext,

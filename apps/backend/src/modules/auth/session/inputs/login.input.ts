@@ -1,21 +1,24 @@
 import { Field, InputType } from '@nestjs/graphql';
-import {IsNotEmpty, IsString, Length} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 @InputType()
 export class LoginInput {
 	@Field()
 	@IsString()
 	@IsNotEmpty()
-	login: string;
+	public login: string;
 
 	@Field()
 	@IsString()
 	@IsNotEmpty()
-	password: string;
+	public password: string;
 
-	@Field(() => String, {nullable: true})
+	// Only sent when the account has TOTP enabled. Without @IsOptional() the
+	// remaining validators run against undefined and reject every normal login.
+	@Field(() => String, { nullable: true })
+	@IsOptional()
 	@IsString()
 	@IsNotEmpty()
 	@Length(6, 6)
-	public pin : string;
+	public pin?: string;
 }

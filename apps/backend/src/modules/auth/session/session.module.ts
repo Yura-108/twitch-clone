@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 
-import { VerificationService } from '@/src/modules/auth/verification/verification.service';
+import { VerificationModule } from '@/src/modules/auth/verification/verification.module';
 
 import { SessionResolver } from './session.resolver';
 import { SessionService } from './session.service';
 
 @Module({
-	providers: [SessionResolver, SessionService, VerificationService]
+	imports: [VerificationModule],
+	providers: [SessionResolver, SessionService],
+	exports: [SessionService]
 })
 export class SessionModule {}

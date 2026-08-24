@@ -4,6 +4,7 @@ import { VerificationResolver } from './verification.resolver';
 import { VerificationService } from './verification.service';
 
 @Module({
-	providers: [VerificationResolver, VerificationService]
+	providers: [VerificationResolver, VerificationService],
+	exports: [VerificationService]
 })
 export class VerificationModule {}

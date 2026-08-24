@@ -9,9 +9,11 @@ import { ConfigService } from '@nestjs/config';
 import type { User } from '@prisma/generated/client';
 import { verify } from 'argon2';
 import type { Request } from 'express';
+import { TOTP } from 'otpauth';
 
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { RedisService } from '@/src/core/redis/redis.service';
+import { AuthModel } from '@/src/modules/auth/account/models/auth.model';
 import { LoginInput } from '@/src/modules/auth/session/inputs/login.input';
 import { SessionModel } from '@/src/modules/auth/session/models/session.model';
 import { VerificationService } from '@/src/modules/auth/verification/verification.service';
@@ -22,8 +24,6 @@ import {
 	destroySession,
 	saveSession
 } from '@/src/shared/utils/session.util';
-import {TOTP} from "otpauth";
-import {AuthModel} from "@/src/modules/auth/account/models/auth.model";
 
 @Injectable()
 export class SessionService {
@@ -79,14 +79,10 @@ export class SessionService {
 		return session;
 	}
 
-	public async login(
-		req: Request,
-		input: LoginInput,
-		userAgent: string
-	){
+	public async login(req: Request, input: LoginInput, userAgent: string) {
 		const { login, password, pin } = input;
 
-		const user = await this.prismaService.user.findFirst({
+		let user = await this.prismaService.user.findFirst({
 			where: {
 				OR: [{ username: { equals: login } }, { email: { equals: login } }]
 			}
@@ -102,6 +98,16 @@ export class SessionService {
 			throw new UnauthorizedException('Invalid password');
 		}
 
+		// Signing in during the grace period cancels the deactivation. Clearing
+		// deactivatedAt matters as much as the flag: the deletion cron selects
+		// by that date, so a leftover value would delete a live account.
+		if (user.isDeactivated) {
+			user = await this.prismaService.user.update({
+				where: { id: user.id },
+				data: { isDeactivated: false, deactivatedAt: null }
+			});
+		}
+
 		if (!user.isEmailVerified) {
 			await this.verificationService.sendVerificationToken(user);
 
@@ -113,8 +119,8 @@ export class SessionService {
 		if (user.isTotpEnabled && user.totpSecret) {
 			if (!pin) {
 				return {
-					message: 'Необходим код для завершения авторизации'
-				}
+					message: 'A verification code is required to finish signing in'
+				};
 			}
 
 			const totp = new TOTP({
@@ -125,16 +131,18 @@ export class SessionService {
 				secret: user.totpSecret
 			});
 
-			const delta = totp.validate({ token: pin })
+			const delta = totp.validate({ token: pin });
 
 			if (delta === null) {
-				throw new BadRequestException('Неверный код')
+				throw new BadRequestException('Invalid code');
 			}
 		}
 
 		const metadata = getSessionMetadata(req, userAgent);
 
-		return saveSession(req, user, metadata);
+		// Wrapped in { user } because the mutation returns AuthModel, whose two
+		// branches are "here is your account" and "send me a TOTP code".
+		return { user: await saveSession(req, user, metadata) };
 	}
 
 	public async logout(req: Request): Promise<boolean> {
@@ -164,6 +172,34 @@ export class SessionService {
 		await this.redisService.del(key);
 
 		return true;
+	}
+
+	// Wipes every session a user holds, on every device. Used when the account
+	// itself changes state — deactivation now, password change later.
+	// toSessionModel() returns null for anything that is not a real session, so
+	// unrelated Redis keys under the prefix are skipped rather than deleted.
+	public async removeAllForUser(userId: string): Promise<number> {
+		const prefix = this.sessionPrefix;
+		const keys = await this.redisService.keys(`${prefix}*`);
+
+		let removed = 0;
+
+		for (const key of keys) {
+			const raw = await this.redisService.get(key);
+
+			if (!raw) {
+				continue;
+			}
+
+			const session = this.toSessionModel(key, raw);
+
+			if (session?.userId === userId) {
+				await this.redisService.del(key);
+				removed++;
+			}
+		}
+
+		return removed;
 	}
 
 	private get sessionPrefix(): string {

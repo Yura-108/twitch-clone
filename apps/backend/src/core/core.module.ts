@@ -5,11 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 
 import { getGraphQLConfig } from '@/src/core/config/graphql.config';
 import { PrismaModule } from '@/src/core/prisma/prisma.module';
-import { AccountModule } from '@/src/modules/auth/account/account.module';
-import { PasswordRecoveryModule } from '@/src/modules/auth/password-recovery/password-recovery.module';
-import { SessionModule } from '@/src/modules/auth/session/session.module';
-import { TotpModule } from '@/src/modules/auth/totp/totp.module';
-import { VerificationModule } from '@/src/modules/auth/verification/verification.module';
+import { AuthModule } from '@/src/modules/auth/auth.module';
 import { MailModule } from '@/src/modules/libs/mail/mail.module';
 import { IS_DEV_ENV } from '@/src/shared/utils/is-dev.utils';
 
@@ -30,11 +26,7 @@ import { RedisModule } from './redis/redis.module';
 		PrismaModule,
 		RedisModule,
 		MailModule,
-		AccountModule,
-		SessionModule,
-		VerificationModule,
-		PasswordRecoveryModule,
-		TotpModule
+		AuthModule
 	]
 })
 export class CoreModule {}

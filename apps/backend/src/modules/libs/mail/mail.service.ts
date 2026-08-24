@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { render } from 'react-email';
 
+import { AccountDeactivationTemplate } from '@/src/modules/libs/mail/templates/account-deactivation.template';
 import { PasswordRecoveryTemplate } from '@/src/modules/libs/mail/templates/password-recovery.template';
 import { VerificationTemplate } from '@/src/modules/libs/mail/templates/verification.template';
 import { SessionMetadata } from '@/src/shared/types/session-metadata.types';
@@ -36,6 +37,16 @@ export class MailService {
 		);
 
 		return this.sendMail(email, 'reset password', html);
+	}
+
+	public async sendDeactivateToken(
+		email: string,
+		token: string,
+		metadata: SessionMetadata
+	) {
+		const html = await render(AccountDeactivationTemplate({ token, metadata }));
+
+		return this.sendMail(email, 'deactivate account', html);
 	}
 
 	private sendMail(email: string, subject: string, html: string) {

@@ -34,6 +34,12 @@ export class UserModel {
 	@Field(() => String, { nullable: true })
 	totpSecret: string;
 
+	@Field(() => Boolean)
+	isDeactivated: boolean;
+
+	@Field(() => Date)
+	deactivatedAt: Date;
+
 	@Field(() => Date)
 	createdAt: Date;
 
