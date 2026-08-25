@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import session from 'express-session';
+import { graphqlUploadExpress } from 'graphql-upload-ts';
 
 import { getSessionCookieOptions } from '@/src/core/config/session.config';
 import { RedisService } from '@/src/core/redis/redis.service';
@@ -23,7 +24,13 @@ async function bootstrap() {
 	const redis = app.get(RedisService);
 
 	app.use(cookieParser(config.getOrThrow<string>('COOKIES_SECRET')));
-	// app.use(config.getOrThrow<string>('GRAPHQL_PREFIX'), graphqlUploadExpress());
+	app.use(
+		config.getOrThrow<string>('GRAPHQL_PREFIX'),
+		// The same 10 MB the profile service enforces, but applied while the
+		// multipart body is still being parsed — the request is cut off before
+		// anything reaches a resolver.
+		graphqlUploadExpress({ maxFileSize: 10 * 1024 * 1024, maxFiles: 1 })
+	);
 
 	app.useGlobalPipes(
 		new ValidationPipe({

@@ -22,11 +22,13 @@
 		"db:push": "prisma db push",
 		"db:migrate": "prisma migrate dev",
 		"db:deploy": "prisma migrate deploy",
-		"db:studio": "prisma studio"
+		"db:studio": "prisma studio",
+		"storage:check": "tsx scripts/check-storage.ts"
 	},
 	"dependencies": {
 		"@apollo/server": "^5.5.1",
 		"@as-integrations/express5": "^1.1.2",
+		"@aws-sdk/client-s3": "^3.1116.0",
 		"@nestjs-modules/mailer": "^2.3.7",
 		"@nestjs/apollo": "^13.4.2",
 		"@nestjs/common": "^11.0.1",
@@ -50,6 +52,8 @@
 		"express-session": "^1.19.0",
 		"geoip-lite": "^2.0.3",
 		"graphql": "^17.0.2",
+		"graphql-upload-ts": "^2.2.0",
+		"heic-convert": "^2.1.0",
 		"hi-base32": "^0.5.1",
 		"i18n-iso-countries": "^7.14.0",
 		"ioredis": "^6.0.0",
@@ -59,6 +63,7 @@
 		"react-email": "6.9.2",
 		"reflect-metadata": "^0.2.2",
 		"rxjs": "^7.8.1",
+		"sharp": "^0.35.3",
 		"tsx": "^4.23.7",
 		"uuid": "^14.0.2"
 	},
@@ -73,6 +78,7 @@
 		"@types/express": "^5.0.0",
 		"@types/express-session": "^1.19.0",
 		"@types/geoip-lite": "^1.4.4",
+		"@types/heic-convert": "^2.1.1",
 		"@types/jest": "^30.0.0",
 		"@types/node": "^24.0.0",
 		"@types/pg": "^8.20.4",
