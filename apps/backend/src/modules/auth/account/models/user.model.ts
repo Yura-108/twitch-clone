@@ -37,8 +37,8 @@ export class UserModel {
 	@Field(() => Boolean)
 	isDeactivated: boolean;
 
-	@Field(() => Date)
-	deactivatedAt: Date;
+	@Field(() => Date, { nullable: true })
+	deactivatedAt: Date | null;
 
 	@Field(() => Date)
 	createdAt: Date;

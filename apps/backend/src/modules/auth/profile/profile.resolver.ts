@@ -1,6 +1,6 @@
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { User } from '@prisma/generated/client';
-import { type FileUpload, GraphQLUpload } from 'graphql-upload-ts';
+import { GraphQLUpload } from 'graphql-upload-ts';
 
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
 import { Authorized } from '@/src/shared/decorators/authorized.decorator';
@@ -9,6 +9,8 @@ import { ProfileService } from './profile.service';
 import {ChangeProfileInfoInput} from "@/src/modules/auth/profile/inputs/change-profile-info.input";
 import {SocialLinkInput, SocialLinkOrderInput} from "@/src/modules/auth/profile/inputs/social-link.input";
 import {SocialLinkModel} from "@/src/modules/auth/profile/models/social-link.model";
+import {ParseUploadPipe} from "@/src/shared/pipes/parse-upload.pipe";
+import type {UploadedImage} from "@/src/shared/types/upload.types";
 
 @Resolver('Profile')
 export class ProfileResolver {
@@ -18,7 +20,15 @@ export class ProfileResolver {
 	@Mutation(() => Boolean, { name: 'changeProfileAvatar' })
 	public async changeAvatar(
 		@Authorized() user: User,
-		@Args('avatar', { type: () => GraphQLUpload }) avatar: Promise<FileUpload>
+		@Args(
+			'avatar',
+			{ type: () => GraphQLUpload },
+			new ParseUploadPipe({
+				maxSize: 10 * 1024 * 1024,
+				formats: ['jpeg', 'png', 'webp', 'gif', 'heif']
+			})
+		)
+		avatar: UploadedImage
 	) {
 		return this.profileService.changeAvatar(user, avatar);
 	}

@@ -3,11 +3,10 @@ import {StorageService} from "@/src/modules/libs/storage/storage.service";
 import {PrismaService} from "@/src/core/prisma/prisma.service";
 import {Prisma} from "@prisma/generated/client";
 import type {User} from "@prisma/generated/client";
-import type { FileUpload } from 'graphql-upload-ts';
-import convert from 'heic-convert';
 import sharp from 'sharp';
 import {ChangeProfileInfoInput} from "@/src/modules/auth/profile/inputs/change-profile-info.input";
 import {SocialLinkInput, SocialLinkOrderInput} from "@/src/modules/auth/profile/inputs/social-link.input";
+import type {UploadedImage} from "@/src/shared/types/upload.types";
 
 @Injectable()
 export class ProfileService {
@@ -16,56 +15,11 @@ export class ProfileService {
 		private readonly storageService: StorageService
 	) {}
 
-	public async changeAvatar(user: User, file: Promise<FileUpload>) {
-		const { createReadStream } = await file;
-
-		const maxSize = 10 * 1024 * 1024;
-		const stream = createReadStream();
-		const chunks: Buffer[] = [];
-		let size = 0;
-
-		for await (const chunk of stream) {
-			size += (chunk as Buffer).length;
-
-			if (size > maxSize) {
-				stream.destroy();
-
-				throw new BadRequestException('The image must be under 10 MB.');
-			}
-
-			chunks.push(chunk as Buffer);
-		}
-
-		let source = Buffer.concat(chunks);
-		let metadata: sharp.Metadata;
-
-		try {
-			metadata = await sharp(source).metadata();
-		} catch {
-			throw new BadRequestException('The file is not a valid image.');
-		}
-
-		const { format, compression } = metadata;
-		const allowedFormats = ['jpeg', 'png', 'webp', 'gif', 'heif', 'avif'];
-
-		if (!format || !allowedFormats.includes(format)) {
-			throw new BadRequestException(
-				'Unsupported image format. Use JPEG, PNG, WebP, GIF or HEIC.'
-			);
-		}
-
+	public async changeAvatar(user: User, image: UploadedImage) {
 		let avatar: Buffer;
 
 		try {
-			if (format === 'heif' && compression === 'hevc') {
-				source = Buffer.from(
-					await convert({ buffer: source, format: 'JPEG', quality: 1 })
-				);
-			}
-
-			avatar = await sharp(source, {
-				animated: format === 'gif' || format === 'webp'
-			})
+			avatar = await sharp(image.buffer, { animated: image.animated })
 				.rotate()
 				.resize(512, 512, { fit: 'cover' })
 				.webp({ quality: 90 })
