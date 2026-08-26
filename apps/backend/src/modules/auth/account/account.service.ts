@@ -6,10 +6,14 @@ import {CreateUserInput} from '@/src/modules/auth/account/inputs/create-user.inp
 import type {User} from "@prisma/generated/client";
 import {ChangePasswordInput} from "@/src/modules/auth/account/inputs/change-password.input";
 import {ChangeEmailInput} from "@/src/modules/auth/account/inputs/change-email.input";
+import {VerificationService} from "@/src/modules/auth/verification/verification.service";
 
 @Injectable()
 export class AccountService {
-	public constructor(private readonly prismaService: PrismaService) {}
+	public constructor(
+		private readonly prismaService: PrismaService,
+		private readonly verificationService: VerificationService,
+	) {}
 
 	public async me(id: string) {
 		return await this.prismaService.user.findUnique({
@@ -36,14 +40,21 @@ export class AccountService {
 			throw new ConflictException('Email already exists');
 		}
 
-		await this.prismaService.user.create({
+		const user = await this.prismaService.user.create({
 			data: {
 				username,
 				email,
 				password: await hash(password),
-				displayName: username
+				displayName: username,
+				stream: {
+					create: {
+						title: `Stream ${username}`,
+					}
+				}
 			}
 		});
+
+		await this.verificationService.sendVerificationToken(user);
 
 		return true;
 	}

@@ -14,7 +14,7 @@ import type {UploadedImage} from "@/src/shared/types/upload.types";
 
 @Resolver('Profile')
 export class ProfileResolver {
-	constructor(private readonly profileService: ProfileService) {}
+	public constructor(private readonly profileService: ProfileService) {}
 
 	@Authorization()
 	@Mutation(() => Boolean, { name: 'changeProfileAvatar' })

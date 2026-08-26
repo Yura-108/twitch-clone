@@ -6,12 +6,17 @@
 
 ## Безопасность
 
+- [x] ~~**`totpSecret` отдавался в GraphQL**~~ — закрыто 2026-08-25
+  Поле было объявлено с `@Field` в `UserModel`, то есть `findProfile` возвращал секрет второго фактора любому, у кого есть сессия: при XSS он утекал навсегда, а не на одну сессию. `@Field` снят, свойство осталось на классе для серверного кода — как у `password`. Проверено интроспекцией на живом сервере: поля в `UserModel` больше нет. Фронтенд его нигде не запрашивал, серверные чтения (`session.service.ts:119`, `totp.service.ts:55`) работают с Prisma-типом `User`.
+  `src/modules/auth/account/models/user.model.ts:35`
+
 - [ ] **Смена пароля не завершает остальные сессии**
   После `newPassword` все ранее выданные сессии в Redis остаются живыми. Если пароль меняли из-за компрометации, злоумышленник сохраняет доступ. Обход ключей уже написан в `SessionService.findByUser` — переиспользовать его, удалив все сессии пользователя кроме текущей.
   `src/modules/auth/password-recovery/password-recovery.service.ts`
 
 - [ ] **TOTP: `enable` принимает `secret` от клиента**
   Сервер выдаёт секрет в `generateTotp`, но нигде его не запоминает — при включении он доверяет тому, что пришло в инпуте. Значит к аккаунту можно привязать произвольный секрет, а не тот, что был показан в QR-коде: одной угнанной сессии достаточно, чтобы навязать пользователю чужой второй фактор. Держать выданный секрет на сервере между `generate` и `enable` (сессия или Redis с коротким TTL), от клиента принимать только пин.
+  Сужено 2026-08-25: секрет больше не утекает через `findProfile`, но между `generateTotp` и `enableTotp` по-прежнему ходит через клиент, и подмена остаётся возможной. Починка убирает `secret` из `EnableTotpInput`, то есть меняет контракт мутации — фронтенд придётся править тем же заходом.
   `src/modules/auth/totp/totp.service.ts`
 
 - [ ] **TOTP: `disable` ничего не переспрашивает**
@@ -65,6 +70,10 @@
 
 ## Логика и корректность
 
+- [x] ~~**`deactivatedAt` объявлен non-nullable**~~ — закрыто 2026-08-25
+  В Prisma поле `DateTime?`, в `UserModel` стояло `@Field(() => Date)` без `nullable`. Ломался не какой-то краевой случай, а ровно наоборот: у любого не деактивированного пользователя `findProfile` падал с `Cannot return null for non-nullable field UserModel.deactivatedAt`. Всплыло в рантайме. Поле помечено `nullable: true`, тип уточнён до `Date | null`. Остальные `@ObjectType` сверены со схемой Prisma — других расхождений по nullability нет.
+  `src/modules/auth/account/models/user.model.ts:40`
+
 - [ ] **Двойной запрос к БД на каждый `findProfile`**
   `GqlAuthGuard` уже загружает пользователя целиком и кладёт в `req.user`, после чего `AccountService.me(id)` делает второй `findUnique` по тому же id. Принимать `@Authorized() user: User` и возвращать его — либо грузить в гварде только `id`.
   `src/shared/guards/gql-auth.guard.ts` + `src/modules/auth/account/account.service.ts`
@@ -96,9 +105,9 @@
   `noImplicitAny: false`, `strictBindCallApply: false`, включён только `strictNullChecks`. Сейчас проект маленький — это самый дешёвый момент поставить `"strict": true`. Через полгода будет неделя правок.
   `apps/backend/tsconfig.json`
 
-- [ ] **`avatar` и `bio` помечены `nullable: true`, но типизированы как `string`**
-  Всплывёт при включении `strict`.
-  `src/modules/auth/account/models/user.model.ts`
+- [ ] **Поля с `nullable: true` типизированы как `string`**
+  `avatar` и `bio` в `UserModel`; `thumbnailUrl`, `ingressId`, `serverUrl`, `streamKey` в `StreamModel`. На рантайм не влияет — GraphQL-нуллабельность указана верно, — но всплывёт при включении `strict`.
+  `src/modules/auth/account/models/user.model.ts`, `src/modules/stream/models/stream.model.ts`
 
 - [ ] **`@nestjs/mapped-types` версия `"*"`**
   Wildcard-версия, зафиксировать.

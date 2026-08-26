@@ -11,7 +11,7 @@ export class ChangeEmailInput {
 	@IsString()
 	@IsNotEmpty()
 	@IsEmail()
-	email: string;
+	public email: string;
 
 
 }

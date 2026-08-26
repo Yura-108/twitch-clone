@@ -10,15 +10,16 @@ export interface ParseUploadOptions {
 	formats: (keyof sharp.FormatEnum)[];
 }
 
-export class ParseUploadPipe
-	implements PipeTransform<Promise<FileUpload>, Promise<UploadedImage>>
-{
+export class ParseUploadPipe implements PipeTransform<
+	Promise<FileUpload>,
+	Promise<UploadedImage>
+> {
 	public constructor(private readonly options: ParseUploadOptions) {}
 
 	public async transform(value: Promise<FileUpload>): Promise<UploadedImage> {
-		const { createReadStream } = await value;
+		const file = await value;
 
-		const stream = createReadStream();
+		const stream = file.createReadStream();
 		const chunks: Buffer[] = [];
 		let size = 0;
 

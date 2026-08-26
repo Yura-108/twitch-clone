@@ -1,48 +1,55 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import {SocialLinkModel} from "@/src/modules/auth/profile/models/social-link.model";
+import {StreamModel} from "@/src/modules/stream/models/stream.model";
 
 @ObjectType({})
 export class UserModel {
 	@Field(() => ID)
-	id: string;
+	public id: string;
 
 	@Field(() => String)
-	email: string;
+	public email: string;
 
-	password: string;
-
-	@Field(() => String)
-	username: string;
+	public password: string;
 
 	@Field(() => String)
-	displayName: string;
+	public username: string;
+
+	@Field(() => String)
+	public displayName: string;
 
 	@Field(() => String, { nullable: true })
-	avatar: string;
+	public avatar: string;
 
 	@Field(() => String, { nullable: true })
-	bio: string;
+	public bio: string;
 
 	@Field(() => Boolean)
-	isVerified: boolean;
+	public isVerified: boolean;
 
 	@Field(() => Boolean)
-	isEmailVerified: boolean;
+	public isEmailVerified: boolean;
 
 	@Field(() => Boolean)
-	isTotpEnabled: boolean;
+	public isTotpEnabled: boolean;
 
-	@Field(() => String, { nullable: true })
-	totpSecret: string;
+	public totpSecret: string | null;
 
 	@Field(() => Boolean)
-	isDeactivated: boolean;
+	public isDeactivated: boolean;
 
 	@Field(() => Date, { nullable: true })
-	deactivatedAt: Date | null;
+	public deactivatedAt: Date | null;
+
+	@Field(() => [SocialLinkModel])
+	public socialLinks: SocialLinkModel[]
+
+	@Field(() => StreamModel)
+	public stream: StreamModel
 
 	@Field(() => Date)
-	createdAt: Date;
+	public createdAt: Date;
 
 	@Field(() => Date)
-	updatedAt: Date;
+	public updatedAt: Date;
 }
