@@ -13,6 +13,7 @@ import { IS_DEV_ENV } from '@/src/shared/utils/is-dev.utils';
 import { RedisModule } from './redis/redis.module';
 import {CronModule} from "@/src/modules/cron/cron.module";
 import {StreamModule} from "@/src/modules/stream/stream.module";
+import {CategoryModule} from "@/src/modules/category/category.module";
 
 @Module({
 	imports: [
@@ -32,7 +33,8 @@ import {StreamModule} from "@/src/modules/stream/stream.module";
 		StorageModule,
 		AuthModule,
 		CronModule,
-		StreamModule
+		StreamModule,
+		CategoryModule
 	]
 })
 export class CoreModule {}

@@ -31,6 +31,9 @@ export class StreamModel implements Stream {
 	@Field(() => String)
 	public userId: string;
 
+	@Field(() => String, { nullable: true })
+	public categoryId: string;
+
 	@Field(() => Date)
 	public createdAt: Date
 

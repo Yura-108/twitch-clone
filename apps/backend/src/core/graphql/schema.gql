@@ -7,6 +7,17 @@ type AuthModel {
   user: UserModel
 }
 
+type CategoryModel {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  slug: String!
+  streams: [StreamModel!]!
+  thumbnailUrl: String!
+  title: String!
+  updatedAt: DateTime!
+}
+
 input ChangeEmailInput {
   email: String!
 }
@@ -23,6 +34,7 @@ input ChangeProfileInfoInput {
 }
 
 input ChangeStreamInfoInput {
+  categoryId: String!
   title: String!
 }
 
@@ -108,9 +120,11 @@ input NewPasswordInput {
 }
 
 type Query {
+  findAllCategories: [CategoryModel!]!
   findAllStreams(filters: FiltersInput): [StreamModel!]!
   findCurrentSession: SessionModel!
   findProfile: UserModel!
+  findRandomCategories: [CategoryModel!]!
   findRandomStreams: [StreamModel!]!
   findSessionsByUser: [SessionModel!]!
   findSocialLinks: [SocialLinkModel!]!
@@ -154,6 +168,7 @@ input SocialLinkOrderInput {
 }
 
 type StreamModel {
+  categoryId: String
   createdAt: DateTime!
   id: ID!
   ingressId: String

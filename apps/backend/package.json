@@ -19,10 +19,11 @@
 		"test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
 		"test:e2e": "jest --config ./test/jest-e2e.json",
 		"db:generate": "prisma generate",
-		"db:push": "prisma db push",
 		"db:migrate": "prisma migrate dev",
 		"db:deploy": "prisma migrate deploy",
 		"db:studio": "prisma studio",
+		"db:sync": "prisma migrate dev && prisma generate",
+		"db:seed": "tsx scripts/seed-categories.ts",
 		"storage:check": "tsx scripts/check-storage.ts"
 	},
 	"dependencies": {

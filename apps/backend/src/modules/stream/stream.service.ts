@@ -74,18 +74,23 @@ export class StreamService {
 	}
 
 	public async changeInfo(user: User, input: ChangeStreamInfoInput) {
-		const { title } = input;
+		const { title, categoryId } = input;
 
-		const { count } = await this.prismaService.stream.updateMany({
+		const stream = await this.prismaService.stream.update({
 			where: {
 				userId: user.id
 			},
 			data: {
 				title,
+				category: {
+					connect: {
+						id: categoryId
+					}
+				}
 			}
 		});
 
-		if (!count) {
+		if (!stream) {
 			throw new NotFoundException('Stream not found.');
 		}
 

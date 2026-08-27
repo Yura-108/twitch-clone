@@ -76,7 +76,7 @@ All commands run from the repo root.
 | `yarn format`       | Prettier write across both workspaces                |
 | `yarn db:generate`  | Regenerate the Prisma client                         |
 | `yarn db:migrate`   | Create + apply a migration (dev)                     |
-| `yarn db:push`      | Push the schema without a migration                  |
+| `yarn db:sync`      | Migration + client regen — the usual after a schema edit |
 | `yarn db:studio`    | Open Prisma Studio                                   |
 | `yarn docker:up`    | Start Postgres + Redis                               |
 | `yarn docker:down`  | Stop them                                            |

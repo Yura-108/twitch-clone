@@ -8,4 +8,9 @@ export class ChangeStreamInfoInput {
 	@IsNotEmpty()
 	@MaxLength(100)
 	public title: string
+
+	@Field(() => String)
+	@IsString()
+	@IsNotEmpty()
+	public categoryId: string;
 }
