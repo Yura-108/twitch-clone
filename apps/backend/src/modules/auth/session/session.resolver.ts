@@ -5,6 +5,7 @@ import { UserModel } from '@/src/modules/auth/account/models/user.model';
 import { LoginInput } from '@/src/modules/auth/session/inputs/login.input';
 import { SessionModel } from '@/src/modules/auth/session/models/session.model';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
+import { ThrottleAuth } from '@/src/shared/decorators/throttle.decorator';
 import { UserAgent } from '@/src/shared/decorators/user-agent.decorator';
 import { type GqlContext } from '@/src/shared/types/gql-context.types';
 
@@ -26,6 +27,7 @@ export class SessionResolver {
 		return this.sessionService.findCurrent(req);
 	}
 
+	@ThrottleAuth()
 	@Mutation(() => AuthModel, { name: 'loginUser' })
 	public async login(
 		@Context() { req }: GqlContext,

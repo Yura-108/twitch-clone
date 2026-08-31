@@ -7,6 +7,7 @@ import { FiltersInput } from '@/src/modules/stream/inputs/filters.input';
 import { StreamModel } from '@/src/modules/stream/models/stream.model';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
 import { Authorized } from '@/src/shared/decorators/authorized.decorator';
+import { ThrottleUpload } from '@/src/shared/decorators/throttle.decorator';
 import { ParseUploadPipe } from '@/src/shared/pipes/parse-upload.pipe';
 import type { UploadedImage } from '@/src/shared/types/upload.types';
 
@@ -38,6 +39,7 @@ export class StreamResolver {
 	}
 
 	@Authorization()
+	@ThrottleUpload()
 	@Mutation(() => Boolean, { name: 'changeStreamThumbnail' })
 	public async changeThumbnail(
 		@Authorized() user: User,

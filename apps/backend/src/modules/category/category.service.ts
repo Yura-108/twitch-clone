@@ -32,7 +32,6 @@ export class CategoryService {
 			select: { id: true }
 		});
 
-
 		const picked = pickRandom(ids, 7);
 
 		if (!picked.length) {

@@ -3,6 +3,10 @@ import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { UserModel } from '@/src/modules/auth/account/models/user.model';
 import { NewPasswordInput } from '@/src/modules/auth/password-recovery/inputs/new-password.input';
 import { ResetPasswordInput } from '@/src/modules/auth/password-recovery/inputs/reset-password.input';
+import {
+	ThrottleAuth,
+	ThrottleMail
+} from '@/src/shared/decorators/throttle.decorator';
 import { UserAgent } from '@/src/shared/decorators/user-agent.decorator';
 import type { GqlContext } from '@/src/shared/types/gql-context.types';
 
@@ -14,6 +18,7 @@ export class PasswordRecoveryResolver {
 		private readonly passwordRecoveryService: PasswordRecoveryService
 	) {}
 
+	@ThrottleMail()
 	@Mutation(() => Boolean, { name: 'resetPassword' })
 	public async resetPassword(
 		@Context() { req }: GqlContext,
@@ -23,6 +28,7 @@ export class PasswordRecoveryResolver {
 		return this.passwordRecoveryService.resetPassword(req, input, userAgent);
 	}
 
+	@ThrottleAuth()
 	@Mutation(() => Boolean, { name: 'newPassword' })
 	public async newPassword(@Args('data') input: NewPasswordInput) {
 		return this.passwordRecoveryService.newPassword(input);

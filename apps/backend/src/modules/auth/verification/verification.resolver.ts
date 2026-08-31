@@ -4,6 +4,10 @@ import type { User } from '@prisma/generated/client';
 import { UserModel } from '@/src/modules/auth/account/models/user.model';
 import { VerificationInput } from '@/src/modules/auth/verification/inputs/verification.input';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
+import {
+	ThrottleAuth,
+	ThrottleMail
+} from '@/src/shared/decorators/throttle.decorator';
 import { UserAgent } from '@/src/shared/decorators/user-agent.decorator';
 import type { GqlContext } from '@/src/shared/types/gql-context.types';
 
@@ -15,6 +19,7 @@ export class VerificationResolver {
 		private readonly verificationService: VerificationService
 	) {}
 
+	@ThrottleAuth()
 	@Mutation(() => UserModel, { name: 'verifyAccount' })
 	public async verify(
 		@Context() { req }: GqlContext,
@@ -25,6 +30,7 @@ export class VerificationResolver {
 	}
 
 	@Authorization()
+	@ThrottleMail()
 	@Mutation(() => Boolean, { name: 'sendVerificationToken' })
 	public async sendToken(@Context() { req }: GqlContext) {
 		return this.verificationService.sendVerificationToken(req.user as User);

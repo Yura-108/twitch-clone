@@ -10,6 +10,7 @@ import {
 import { SocialLinkModel } from '@/src/modules/auth/profile/models/social-link.model';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
 import { Authorized } from '@/src/shared/decorators/authorized.decorator';
+import { ThrottleUpload } from '@/src/shared/decorators/throttle.decorator';
 import { ParseUploadPipe } from '@/src/shared/pipes/parse-upload.pipe';
 import type { UploadedImage } from '@/src/shared/types/upload.types';
 
@@ -20,6 +21,7 @@ export class ProfileResolver {
 	public constructor(private readonly profileService: ProfileService) {}
 
 	@Authorization()
+	@ThrottleUpload()
 	@Mutation(() => Boolean, { name: 'changeProfileAvatar' })
 	public async changeAvatar(
 		@Authorized() user: User,

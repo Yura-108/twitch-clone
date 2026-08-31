@@ -6,6 +6,7 @@ import { EnableTotpInput } from '@/src/modules/auth/totp/inputs/enable-totp.inpu
 import { TotpModel } from '@/src/modules/auth/totp/models/totp.model';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
 import { Authorized } from '@/src/shared/decorators/authorized.decorator';
+import { ThrottleOtp } from '@/src/shared/decorators/throttle.decorator';
 
 import { TotpService } from './totp.service';
 
@@ -14,12 +15,14 @@ export class TotpResolver {
 	public constructor(private readonly totpService: TotpService) {}
 
 	@Authorization()
+	@ThrottleOtp()
 	@Mutation(() => TotpModel, { name: 'generateTotp' })
 	public async generate(@Authorized() user: User) {
 		return this.totpService.generate(user);
 	}
 
 	@Authorization()
+	@ThrottleOtp()
 	@Mutation(() => [String], { name: 'enableTotp' })
 	public async enable(
 		@Authorized() user: User,
@@ -29,6 +32,7 @@ export class TotpResolver {
 	}
 
 	@Authorization()
+	@ThrottleOtp()
 	@Mutation(() => Boolean, { name: 'disableTotp' })
 	public async disable(
 		@Authorized() user: User,

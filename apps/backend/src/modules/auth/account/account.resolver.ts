@@ -7,6 +7,7 @@ import { CreateUserInput } from '@/src/modules/auth/account/inputs/create-user.i
 import { UserModel } from '@/src/modules/auth/account/models/user.model';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
 import { Authorized } from '@/src/shared/decorators/authorized.decorator';
+import { ThrottleAuth } from '@/src/shared/decorators/throttle.decorator';
 import type { GqlContext } from '@/src/shared/types/gql-context.types';
 
 import { AccountService } from './account.service';
@@ -21,6 +22,7 @@ export class AccountResolver {
 		return this.accountService.me(id);
 	}
 
+	@ThrottleAuth()
 	@Mutation(() => Boolean, { name: 'createUser' })
 	public async create(@Args('data') input: CreateUserInput) {
 		return this.accountService.create(input);
@@ -36,6 +38,7 @@ export class AccountResolver {
 	}
 
 	@Authorization()
+	@ThrottleAuth()
 	@Mutation(() => Boolean, { name: 'changePassword' })
 	public async changePassword(
 		@Context() { req }: GqlContext,
