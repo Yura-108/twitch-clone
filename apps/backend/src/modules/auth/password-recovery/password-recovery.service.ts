@@ -10,6 +10,7 @@ import { Request } from 'express';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { NewPasswordInput } from '@/src/modules/auth/password-recovery/inputs/new-password.input';
 import { ResetPasswordInput } from '@/src/modules/auth/password-recovery/inputs/reset-password.input';
+import { SessionService } from '@/src/modules/auth/session/session.service';
 import { MailService } from '@/src/modules/libs/mail/mail.service';
 import { generateToken } from '@/src/shared/utils/generate-token.util';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata.util';
@@ -18,7 +19,8 @@ import { getSessionMetadata } from '@/src/shared/utils/session-metadata.util';
 export class PasswordRecoveryService {
 	public constructor(
 		private readonly prismaService: PrismaService,
-		private readonly mailService: MailService
+		private readonly mailService: MailService,
+		private readonly sessionService: SessionService
 	) {}
 
 	public async resetPassword(
@@ -85,6 +87,8 @@ export class PasswordRecoveryService {
 				type: TokenType.PASSWORD_RESET
 			}
 		});
+
+		await this.sessionService.removeAllForUser(existingToken.userId);
 
 		return true;
 	}

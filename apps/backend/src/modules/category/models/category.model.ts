@@ -1,6 +1,7 @@
-import {Field, ID, ObjectType} from "@nestjs/graphql";
-import type {Category} from "@prisma/generated/client";
-import {StreamModel} from "@/src/modules/stream/models/stream.model";
+import { Field, ID, ObjectType } from '@nestjs/graphql';
+import type { Category } from '@prisma/generated/client';
+
+import { StreamModel } from '@/src/modules/stream/models/stream.model';
 
 @ObjectType()
 export class CategoryModel implements Category {
@@ -14,7 +15,7 @@ export class CategoryModel implements Category {
 	public slug: string;
 
 	@Field(() => String, { nullable: true })
-	public description: string;
+	public description: string | null;
 
 	@Field(() => String)
 	public thumbnailUrl: string;
@@ -23,8 +24,8 @@ export class CategoryModel implements Category {
 	public streams: StreamModel[];
 
 	@Field(() => Date)
-	public createdAt: Date
+	public createdAt: Date;
 
 	@Field(() => Date)
-	public updatedAt: Date
+	public updatedAt: Date;
 }

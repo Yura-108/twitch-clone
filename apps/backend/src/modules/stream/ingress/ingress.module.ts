@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { IngressService } from './ingress.service';
+
 import { IngressResolver } from './ingress.resolver';
+import { IngressService } from './ingress.service';
 
 @Module({
-  providers: [IngressResolver, IngressService],
+	providers: [IngressResolver, IngressService]
 })
 export class IngressModule {}

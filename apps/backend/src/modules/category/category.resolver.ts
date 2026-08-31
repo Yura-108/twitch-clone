@@ -1,14 +1,19 @@
-import {Args, Query, Resolver} from '@nestjs/graphql';
+import { Args, Query, Resolver } from '@nestjs/graphql';
+
+import { CategoryFiltersInput } from '@/src/modules/category/inputs/filters.input';
+import { CategoryModel } from '@/src/modules/category/models/category.model';
+
 import { CategoryService } from './category.service';
-import {CategoryModel} from "@/src/modules/category/models/category.model";
 
 @Resolver('Category')
 export class CategoryResolver {
-  constructor(private readonly categoryService: CategoryService) {}
+	public constructor(private readonly categoryService: CategoryService) {}
 
 	@Query(() => [CategoryModel], { name: 'findAllCategories' })
-	public async findAll() {
-		return await this.categoryService.findAll();
+	public async findAll(
+		@Args('filters', { nullable: true }) filters?: CategoryFiltersInput
+	) {
+		return await this.categoryService.findAll(filters);
 	}
 
 	@Query(() => [CategoryModel], { name: 'findRandomCategories' })

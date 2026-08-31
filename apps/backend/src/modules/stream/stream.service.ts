@@ -1,12 +1,18 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import {ConfigService} from "@nestjs/config";
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Prisma, User } from '@prisma/generated/client';
 import sharp from 'sharp';
-import {PrismaService} from "@/src/core/prisma/prisma.service";
-import {StorageService} from "@/src/modules/libs/storage/storage.service";
-import {FiltersInput} from "@/src/modules/stream/inputs/filters.input";
-import type {Prisma, User} from "@prisma/generated/client";
-import {ChangeStreamInfoInput} from "@/src/modules/stream/inputs/change-stream-info.input";
-import type {UploadedImage} from "@/src/shared/types/upload.types";
+
+import { PrismaService } from '@/src/core/prisma/prisma.service';
+import { StorageService } from '@/src/modules/libs/storage/storage.service';
+import { ChangeStreamInfoInput } from '@/src/modules/stream/inputs/change-stream-info.input';
+import { FiltersInput } from '@/src/modules/stream/inputs/filters.input';
+import type { UploadedImage } from '@/src/shared/types/upload.types';
+import { pickRandom } from '@/src/shared/utils/pick-random.util';
 
 @Injectable()
 export class StreamService {
@@ -16,8 +22,8 @@ export class StreamService {
 		private readonly storageService: StorageService
 	) {}
 
-	public async findAll(input: FiltersInput = {})  {
-		const { take, skip, searchTerm } =  input;
+	public async findAll(input: FiltersInput = {}) {
+		const { take, skip, searchTerm } = input;
 
 		const where: Prisma.StreamWhereInput = {
 			AND: [
@@ -31,7 +37,7 @@ export class StreamService {
 			skip: skip ?? 0,
 			where,
 			include: {
-				user: true,
+				user: true
 			},
 			orderBy: {
 				createdAt: 'desc'
@@ -40,37 +46,27 @@ export class StreamService {
 	}
 
 	public async findRandom() {
-		const where = this.findLiveFilter();
+		const ids = await this.prismaService.stream.findMany({
+			where: this.findLiveFilter(),
+			select: { id: true }
+		});
 
-		const total = await this.prismaService.stream.count({ where });
-		const amount = Math.min(4, total);
+		const picked = pickRandom(ids, 4);
 
-		if (!amount) {
+		if (!picked.length) {
 			return [];
 		}
 
-		const offsets = new Set<number>();
-
-		while (offsets.size < amount) {
-			offsets.add(Math.floor(Math.random() * total));
-		}
-
-		const streams = await Promise.all(
-			Array.from(offsets).map(skip =>
-				this.prismaService.stream.findFirst({
-					where,
-					include: {
-						user: true,
-					},
-					orderBy: {
-						id: 'asc'
-					},
-					skip
-				})
-			)
-		);
-
-		return streams.filter(stream => stream !== null);
+		return this.prismaService.stream.findMany({
+			where: {
+				id: {
+					in: picked.map(stream => stream.id)
+				}
+			},
+			include: {
+				user: true
+			}
+		});
 	}
 
 	public async changeInfo(user: User, input: ChangeStreamInfoInput) {
@@ -109,15 +105,15 @@ export class StreamService {
 		try {
 			thumbnail = await sharp(image.buffer, { animated: image.animated })
 				.rotate()
-				.resize(1280, 720, {fit: 'cover'})
-				.webp({quality: 90})
+				.resize(1280, 720, { fit: 'cover' })
+				.webp({ quality: 90 })
 				.toBuffer();
 		} catch {
 			throw new BadRequestException('The image could not be processed.');
 		}
 
 		const key = `streams/${user.username}/thumbnail-${Date.now()}.webp`;
-		const  previousThumbnail = stream.thumbnailUrl;
+		const previousThumbnail = stream.thumbnailUrl;
 
 		await this.storageService.upload(thumbnail, key, 'image/webp');
 
@@ -145,17 +141,17 @@ export class StreamService {
 		}
 
 		if (!stream.thumbnailUrl) {
-			return true
+			return true;
 		}
 
 		await this.prismaService.stream.update({
-			where: {userId: user.id},
-			data: {thumbnailUrl: null}
+			where: { userId: user.id },
+			data: { thumbnailUrl: null }
 		});
 
 		await this.storageService.remove(stream.thumbnailUrl);
 
-		return true
+		return true;
 	}
 
 	public async findByUserId(user: User) {
@@ -163,7 +159,7 @@ export class StreamService {
 			where: {
 				userId: user.id
 			}
-		})
+		});
 	}
 
 	private findLiveFilter(): Prisma.StreamWhereInput {
@@ -193,6 +189,6 @@ export class StreamService {
 					}
 				}
 			]
-		}
+		};
 	}
 }

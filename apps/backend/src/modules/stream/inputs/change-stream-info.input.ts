@@ -1,5 +1,5 @@
-import {Field, InputType} from "@nestjs/graphql";
-import {IsNotEmpty, IsString, MaxLength} from "class-validator";
+import { Field, InputType } from '@nestjs/graphql';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 @InputType()
 export class ChangeStreamInfoInput {
@@ -7,7 +7,7 @@ export class ChangeStreamInfoInput {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(100)
-	public title: string
+	public title: string;
 
 	@Field(() => String)
 	@IsString()

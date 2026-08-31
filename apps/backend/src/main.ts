@@ -13,8 +13,6 @@ import { RedisService } from '@/src/core/redis/redis.service';
 
 import { CoreModule } from './core/core.module';
 
-// Scripts run with cwd = apps/backend (yarn workspaces), so the single
-// source-of-truth .env at the monorepo root is two levels up.
 expand(config({ path: '../../.env' }));
 
 async function bootstrap() {
@@ -26,9 +24,6 @@ async function bootstrap() {
 	app.use(cookieParser(config.getOrThrow<string>('COOKIES_SECRET')));
 	app.use(
 		config.getOrThrow<string>('GRAPHQL_PREFIX'),
-		// The same 10 MB the profile service enforces, but applied while the
-		// multipart body is still being parsed — the request is cut off before
-		// anything reaches a resolver.
 		graphqlUploadExpress({ maxFileSize: 10 * 1024 * 1024, maxFiles: 1 })
 	);
 

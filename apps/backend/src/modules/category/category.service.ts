@@ -1,13 +1,19 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
-import {PrismaService} from "@/src/core/prisma/prisma.service";
-import {Category} from "@prisma/generated/client";
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+import { PrismaService } from '@/src/core/prisma/prisma.service';
+import { CategoryFiltersInput } from '@/src/modules/category/inputs/filters.input';
+import { pickRandom } from '@/src/shared/utils/pick-random.util';
 
 @Injectable()
 export class CategoryService {
 	public constructor(private readonly prismaService: PrismaService) {}
 
-	public async findAll() {
+	public async findAll(input: CategoryFiltersInput = {}) {
+		const { take, skip } = input;
+
 		return this.prismaService.category.findMany({
+			take: Math.min(take ?? 12, 50),
+			skip: skip ?? 0,
 			orderBy: {
 				createdAt: 'desc'
 			},
@@ -22,38 +28,31 @@ export class CategoryService {
 	}
 
 	public async findRandom() {
-		const total = await this.prismaService.category.count();
+		const ids = await this.prismaService.category.findMany({
+			select: { id: true }
+		});
 
-		const amount = Math.min(7, total);
 
-		if (!amount) {
+		const picked = pickRandom(ids, 7);
+
+		if (!picked.length) {
 			return [];
 		}
 
-		const offsets = new Set<number>();
-
-		while (offsets.size < amount) {
-			offsets.add(Math.floor(Math.random() * total));
-		}
-
-		const categories = await Promise.all(
-			Array.from(offsets).map(skip =>
-			this.prismaService.category.findFirst({
-				include: {
-					streams: {
-						include: {
-							user: true
-						}
+		return this.prismaService.category.findMany({
+			where: {
+				id: {
+					in: picked.map(category => category.id)
+				}
+			},
+			include: {
+				streams: {
+					include: {
+						user: true
 					}
-				},
-				orderBy: {
-					id: 'asc'
-				},
-				skip
-			}))
-		);
-
-		return categories.filter(category => category !== null);
+				}
+			}
+		});
 	}
 
 	public async findBySlug(slug: string) {
@@ -69,7 +68,7 @@ export class CategoryService {
 		});
 
 		if (!category) {
-			throw new NotFoundException('Category is not found')
+			throw new NotFoundException('Category is not found');
 		}
 
 		return category;

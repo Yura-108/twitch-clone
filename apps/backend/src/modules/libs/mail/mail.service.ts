@@ -4,10 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { render } from 'react-email';
 
 import { AccountDeactivationTemplate } from '@/src/modules/libs/mail/templates/account-deactivation.template';
+import { AccountDeletionTemplate } from '@/src/modules/libs/mail/templates/account-deletion.template';
 import { PasswordRecoveryTemplate } from '@/src/modules/libs/mail/templates/password-recovery.template';
 import { VerificationTemplate } from '@/src/modules/libs/mail/templates/verification.template';
 import { SessionMetadata } from '@/src/shared/types/session-metadata.types';
-import {AccountDeletionTemplate} from "@/src/modules/libs/mail/templates/account-deletion.template";
 
 @Injectable()
 export class MailService {
@@ -54,9 +54,7 @@ export class MailService {
 		const domain = this.configService
 			.getOrThrow<string>('ALLOWED_ORIGIN')
 			.replace(/\/$/, '');
-		const html = await render(
-			AccountDeletionTemplate({domain})
-		);
+		const html = await render(AccountDeletionTemplate({ domain }));
 
 		return this.sendMail(email, 'account deleted', html);
 	}

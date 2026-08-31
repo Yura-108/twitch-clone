@@ -1,5 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
+import {
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	Length,
+	MaxLength
+} from 'class-validator';
 
 @InputType()
 export class LoginInput {
@@ -21,4 +27,13 @@ export class LoginInput {
 	@IsNotEmpty()
 	@Length(6, 6)
 	public pin?: string;
+
+	// The way back in after losing the authenticator: without this the account
+	// is sealed, because disabling TOTP itself requires being signed in.
+	@Field(() => String, { nullable: true })
+	@IsOptional()
+	@IsString()
+	@IsNotEmpty()
+	@MaxLength(32)
+	public recoveryCode?: string;
 }

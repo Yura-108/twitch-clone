@@ -9,21 +9,24 @@ import { ConfigService } from '@nestjs/config';
 import type { User } from '@prisma/generated/client';
 import { verify } from 'argon2';
 import type { Request } from 'express';
-import { TOTP } from 'otpauth';
 
+import { getEncryptionKey } from '@/src/core/config/encryption.config';
 import { PrismaService } from '@/src/core/prisma/prisma.service';
 import { RedisService } from '@/src/core/redis/redis.service';
 import { AuthModel } from '@/src/modules/auth/account/models/auth.model';
 import { LoginInput } from '@/src/modules/auth/session/inputs/login.input';
 import { SessionModel } from '@/src/modules/auth/session/models/session.model';
+import { RecoveryCodeService } from '@/src/modules/auth/totp/recovery-code.service';
 import { VerificationService } from '@/src/modules/auth/verification/verification.service';
 import type { StoredSession } from '@/src/shared/types/session.types';
+import { decrypt } from '@/src/shared/utils/encryption.util';
 import { getSessionMetadata } from '@/src/shared/utils/session-metadata.util';
 import {
 	clearSessionCookie,
 	destroySession,
 	saveSession
 } from '@/src/shared/utils/session.util';
+import { verifyTotpPin } from '@/src/shared/utils/totp.util';
 
 @Injectable()
 export class SessionService {
@@ -31,7 +34,8 @@ export class SessionService {
 		private readonly prismaService: PrismaService,
 		private readonly configService: ConfigService,
 		private readonly redisService: RedisService,
-		private readonly verificationService: VerificationService
+		private readonly verificationService: VerificationService,
+		private readonly recoveryCodeService: RecoveryCodeService
 	) {}
 
 	public async findByUser(req: Request): Promise<SessionModel[]> {
@@ -80,7 +84,7 @@ export class SessionService {
 	}
 
 	public async login(req: Request, input: LoginInput, userAgent: string) {
-		const { login, password, pin } = input;
+		const { login, password, pin, recoveryCode } = input;
 
 		let user = await this.prismaService.user.findFirst({
 			where: {
@@ -117,24 +121,30 @@ export class SessionService {
 		}
 
 		if (user.isTotpEnabled && user.totpSecret) {
-			if (!pin) {
+			if (!pin && !recoveryCode) {
 				return {
 					message: 'A verification code is required to finish signing in'
 				};
 			}
 
-			const totp = new TOTP({
-				issuer: 'Twitch',
-				label: `${user.email}`,
-				algorithm: 'SHA1',
-				digits: 6,
-				secret: user.totpSecret
-			});
+			if (pin) {
+				const secret = decrypt(
+					user.totpSecret,
+					getEncryptionKey(this.configService)
+				);
 
-			const delta = totp.validate({ token: pin });
+				if (!verifyTotpPin(user.email, secret, pin)) {
+					throw new BadRequestException('Invalid code');
+				}
+			} else if (recoveryCode) {
+				const consumed = await this.recoveryCodeService.consume(
+					user.id,
+					recoveryCode
+				);
 
-			if (delta === null) {
-				throw new BadRequestException('Invalid code');
+				if (!consumed) {
+					throw new BadRequestException('Invalid recovery code');
+				}
 			}
 		}
 
@@ -174,17 +184,20 @@ export class SessionService {
 		return true;
 	}
 
-	// Wipes every session a user holds, on every device. Used when the account
-	// itself changes state — deactivation now, password change later.
-	// toSessionModel() returns null for anything that is not a real session, so
-	// unrelated Redis keys under the prefix are skipped rather than deleted.
-	public async removeAllForUser(userId: string): Promise<number> {
+	public async removeAllForUser(
+		userId: string,
+		exceptSessionId?: string
+	): Promise<number> {
 		const prefix = this.sessionPrefix;
 		const keys = await this.redisService.keys(`${prefix}*`);
 
 		let removed = 0;
 
 		for (const key of keys) {
+			if (exceptSessionId && key.slice(prefix.length) === exceptSessionId) {
+				continue;
+			}
+
 			const raw = await this.redisService.get(key);
 
 			if (!raw) {

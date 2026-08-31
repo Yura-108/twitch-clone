@@ -7,6 +7,11 @@ type AuthModel {
   user: UserModel
 }
 
+input CategoryFiltersInput {
+  skip: Int
+  take: Int
+}
+
 type CategoryModel {
   createdAt: DateTime!
   description: String
@@ -61,15 +66,29 @@ type DeviceModel {
   type: String!
 }
 
+input DisableTotpInput {
+  pin: String
+  recoveryCode: String
+}
+
 input EnableTotpInput {
   pin: String!
-  secret: String!
 }
 
 input FiltersInput {
   searchTerm: String
   skip: Int
   take: Int
+}
+
+type FollowModel {
+  createdAt: DateTime!
+  follower: UserModel
+  followerId: String!
+  following: UserModel
+  followingId: String!
+  id: ID!
+  updatedAt: DateTime!
 }
 
 type LocationModel {
@@ -83,6 +102,7 @@ input LoginInput {
   login: String!
   password: String!
   pin: String
+  recoveryCode: String
 }
 
 type Mutation {
@@ -96,8 +116,9 @@ type Mutation {
   createSocialLink(data: SocialLinkInput!): Boolean!
   createUser(data: CreateUserInput!): Boolean!
   deactivateAccount(data: DeactivateAccountInput!): AuthModel!
-  disableTotp: Boolean!
-  enableTotp(data: EnableTotpInput!): Boolean!
+  disableTotp(data: DisableTotpInput!): Boolean!
+  enableTotp(data: EnableTotpInput!): [String!]!
+  followChannel(channelId: String!): Boolean!
   generateTotp: TotpModel!
   loginUser(data: LoginInput!): AuthModel!
   logoutUser: Boolean!
@@ -109,6 +130,7 @@ type Mutation {
   reorderSocialLinks(list: [SocialLinkOrderInput!]!): Boolean!
   resetPassword(data: ResetPasswordInput!): Boolean!
   sendVerificationToken: Boolean!
+  unfollowChannel(channelId: String!): Boolean!
   updateSocialLink(data: SocialLinkInput!, id: ID!): Boolean!
   verifyAccount(data: VerificationInput!): UserModel!
 }
@@ -120,12 +142,18 @@ input NewPasswordInput {
 }
 
 type Query {
-  findAllCategories: [CategoryModel!]!
+  findAllCategories(filters: CategoryFiltersInput): [CategoryModel!]!
   findAllStreams(filters: FiltersInput): [StreamModel!]!
+  findCategoryBySlug(slug: String!): CategoryModel!
+  findChannelByUsername(username: String!): UserModel!
   findCurrentSession: SessionModel!
+  findFollowersCountByChannel(channelId: String!): Int!
+  findMyFollowers: [FollowModel!]!
+  findMyFollowing: [FollowModel!]!
   findProfile: UserModel!
   findRandomCategories: [CategoryModel!]!
   findRandomStreams: [StreamModel!]!
+  findRecommendedChannels: [UserModel!]!
   findSessionsByUser: [SessionModel!]!
   findSocialLinks: [SocialLinkModel!]!
 }
@@ -203,7 +231,7 @@ type UserModel {
   isTotpEnabled: Boolean!
   isVerified: Boolean!
   socialLinks: [SocialLinkModel!]!
-  stream: StreamModel!
+  stream: StreamModel
   updatedAt: DateTime!
   username: String!
 }

@@ -1,12 +1,21 @@
-import {BadRequestException, ConflictException, Injectable, NotFoundException} from '@nestjs/common';
-import {StorageService} from "@/src/modules/libs/storage/storage.service";
-import {PrismaService} from "@/src/core/prisma/prisma.service";
-import {Prisma} from "@prisma/generated/client";
-import type {User} from "@prisma/generated/client";
+import {
+	BadRequestException,
+	ConflictException,
+	Injectable,
+	NotFoundException
+} from '@nestjs/common';
+import { Prisma } from '@prisma/generated/client';
+import type { User } from '@prisma/generated/client';
 import sharp from 'sharp';
-import {ChangeProfileInfoInput} from "@/src/modules/auth/profile/inputs/change-profile-info.input";
-import {SocialLinkInput, SocialLinkOrderInput} from "@/src/modules/auth/profile/inputs/social-link.input";
-import type {UploadedImage} from "@/src/shared/types/upload.types";
+
+import { PrismaService } from '@/src/core/prisma/prisma.service';
+import { ChangeProfileInfoInput } from '@/src/modules/auth/profile/inputs/change-profile-info.input';
+import {
+	SocialLinkInput,
+	SocialLinkOrderInput
+} from '@/src/modules/auth/profile/inputs/social-link.input';
+import { StorageService } from '@/src/modules/libs/storage/storage.service';
+import type { UploadedImage } from '@/src/shared/types/upload.types';
 
 @Injectable()
 export class ProfileService {

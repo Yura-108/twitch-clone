@@ -1,14 +1,15 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import type { User } from '@prisma/generated/client';
 
+import { ChangeEmailInput } from '@/src/modules/auth/account/inputs/change-email.input';
+import { ChangePasswordInput } from '@/src/modules/auth/account/inputs/change-password.input';
 import { CreateUserInput } from '@/src/modules/auth/account/inputs/create-user.input';
 import { UserModel } from '@/src/modules/auth/account/models/user.model';
 import { Authorization } from '@/src/shared/decorators/auth.decorator';
 import { Authorized } from '@/src/shared/decorators/authorized.decorator';
+import type { GqlContext } from '@/src/shared/types/gql-context.types';
 
 import { AccountService } from './account.service';
-import {ChangeEmailInput} from "@/src/modules/auth/account/inputs/change-email.input";
-import type {User} from "@prisma/generated/client";
-import {ChangePasswordInput} from "@/src/modules/auth/account/inputs/change-password.input";
 
 @Resolver('Account')
 export class AccountResolver {
@@ -37,9 +38,10 @@ export class AccountResolver {
 	@Authorization()
 	@Mutation(() => Boolean, { name: 'changePassword' })
 	public async changePassword(
+		@Context() { req }: GqlContext,
 		@Authorized() user: User,
 		@Args('data') input: ChangePasswordInput
 	) {
-		return this.accountService.changePassword(user, input)
+		return this.accountService.changePassword(req, user, input);
 	}
 }

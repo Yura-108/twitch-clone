@@ -1,6 +1,12 @@
-import {Field, InputType} from "@nestjs/graphql";
-import {Transform} from "class-transformer";
-import {IsNotEmpty, IsOptional, IsString, Matches, MaxLength} from "class-validator";
+import { Field, InputType } from '@nestjs/graphql';
+import { Transform } from 'class-transformer';
+import {
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	Matches,
+	MaxLength
+} from 'class-validator';
 
 @InputType()
 export class ChangeProfileInfoInput {

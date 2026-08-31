@@ -58,6 +58,7 @@
 		"hi-base32": "^0.5.1",
 		"i18n-iso-countries": "^7.14.0",
 		"ioredis": "^6.0.0",
+		"livekit-server-sdk": "^2.18.0",
 		"otpauth": "^9.5.1",
 		"pg": "^8.22.0",
 		"qrcode": "^1.5.4",

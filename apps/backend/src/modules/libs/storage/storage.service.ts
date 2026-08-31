@@ -4,7 +4,11 @@ import {
 	PutObjectCommand,
 	S3Client
 } from '@aws-sdk/client-s3';
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+	Injectable,
+	InternalServerErrorException,
+	Logger
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { requireEnv } from '@/src/shared/utils/require-env.util';
