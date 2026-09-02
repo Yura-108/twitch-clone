@@ -1,4 +1,7 @@
 {
+  "dependencies": {
+    "@nestjs/mapped-types": "*"
+  },
   "name": "twitch",
   "version": "1.0.0",
   "description": "Full-stack Twitch clone — NestJS + GraphQL + Prisma backend, Next.js frontend",

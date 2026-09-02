@@ -26,7 +26,11 @@ export class LivekitService {
 			this.options.apiSecret
 		);
 
-		this.ingressClient = new IngressClient(this.options.apiUrl);
+		this.ingressClient = new IngressClient(
+			this.options.apiUrl,
+			this.options.apiKey,
+			this.options.apiSecret
+		);
 
 		this.webhookReceiver = new WebhookReceiver(
 			this.options.apiKey,

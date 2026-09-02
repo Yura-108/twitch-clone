@@ -37,7 +37,8 @@ export class StreamService {
 			skip: skip ?? 0,
 			where,
 			include: {
-				user: true
+				user: true,
+				category: true
 			},
 			orderBy: {
 				createdAt: 'desc'
@@ -64,7 +65,8 @@ export class StreamService {
 				}
 			},
 			include: {
-				user: true
+				user: true,
+				category: true
 			}
 		});
 	}

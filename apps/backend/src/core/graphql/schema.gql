@@ -91,6 +91,12 @@ type FollowModel {
   updatedAt: DateTime!
 }
 
+enum IngressInput {
+  RTMP_INPUT
+  URL_INPUT
+  WHIP_INPUT
+}
+
 type LocationModel {
   city: String!
   country: String!
@@ -113,6 +119,7 @@ type Mutation {
   changeStreamInfo(data: ChangeStreamInfoInput!): Boolean!
   changeStreamThumbnail(thumbnail: Upload!): Boolean!
   clearSessionCookie: Boolean!
+  createIngress(ingressType: IngressInput!): Boolean!
   createSocialLink(data: SocialLinkInput!): Boolean!
   createUser(data: CreateUserInput!): Boolean!
   deactivateAccount(data: DeactivateAccountInput!): AuthModel!
