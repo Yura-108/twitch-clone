@@ -20,6 +20,8 @@ model User {
 	avatar String?
 	bio    String?
 
+	telegramId String? @unique @map("telegram_id")
+
 	isVerified Boolean @default(false) @map("is_verified")
 
 	isEmailVerified Boolean @default(false) @map("is_email_verified")
@@ -177,14 +179,20 @@ model Stream {
 
 	isLive Boolean @default(false) @map("is_live")
 
+	isChatEnabled              Boolean @default(true) @map("is_chat_enabled")
+	isChatFollowersOnly        Boolean @default(false) @map("is_chat_followers_only")
+	isChatPremiumFollowersOnly Boolean @default(false) @map("is_chat_premium_followers_only")
+
+	chatMessages ChatMessage[]
+
 	user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 	userId String @unique @map("user_id")
 
-	createdAt    DateTime      @default(now()) @map("created_at")
-	updatedAt    DateTime      @updatedAt @map("updated_at")
-	category     Category?     @relation(fields: [categoryId], references: [id])
-	categoryId   String?       @map("category_id")
-	chatMessages ChatMessage[]
+	category   Category? @relation(fields: [categoryId], references: [id])
+	categoryId String?   @map("category_id")
+
+	createdAt DateTime @default(now()) @map("created_at")
+	updatedAt DateTime @updatedAt @map("updated_at")
 
 	@@index([isLive])
 	@@map("streams")

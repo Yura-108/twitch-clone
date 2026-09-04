@@ -1,14 +1,12 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { RedisStore } from 'connect-redis';
 import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { expand } from 'dotenv-expand';
-import session from 'express-session';
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 
-import { getSessionCookieOptions } from '@/src/core/config/session.config';
+import { getSessionMiddleware } from '@/src/core/config/session.config';
 import { RedisService } from '@/src/core/redis/redis.service';
 
 import { CoreModule } from './core/core.module';
@@ -33,19 +31,7 @@ async function bootstrap() {
 		})
 	);
 
-	app.use(
-		session({
-			secret: config.getOrThrow<string>('SESSION_SECRET'),
-			name: config.getOrThrow<string>('SESSION_NAME'),
-			resave: false,
-			saveUninitialized: false,
-			cookie: getSessionCookieOptions(config),
-			store: new RedisStore({
-				client: redis,
-				prefix: config.getOrThrow<string>('SESSION_FOLDER')
-			})
-		})
-	);
+	app.use(getSessionMiddleware(config, redis));
 
 	app.enableCors({
 		origin: config.getOrThrow<string>('ALLOWED_ORIGIN'),

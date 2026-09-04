@@ -7,10 +7,14 @@ import { Prisma } from '@prisma/generated/client';
 import type { User } from '@prisma/generated/client';
 
 import { PrismaService } from '@/src/core/prisma/prisma.service';
+import { NotificationService } from '@/src/modules/notification/notification.service';
 
 @Injectable()
 export class FollowService {
-	public constructor(private readonly prismaService: PrismaService) {}
+	public constructor(
+		private readonly prismaService: PrismaService,
+		private readonly notificationService: NotificationService
+	) {}
 
 	public async findMyFollowers(user: User) {
 		return this.prismaService.follow.findMany({
@@ -49,6 +53,9 @@ export class FollowService {
 			where: {
 				id: channelId,
 				isDeactivated: false
+			},
+			include: {
+				notificationsSettings: true
 			}
 		});
 
@@ -72,6 +79,12 @@ export class FollowService {
 			}
 
 			throw error;
+		}
+
+		// Settings are created lazily, so a channel without a row keeps the
+		// schema default of site notifications being on.
+		if (channel.notificationsSettings?.siteNotifications ?? true) {
+			await this.notificationService.createNewFollowing(channel.id, user);
 		}
 
 		return true;

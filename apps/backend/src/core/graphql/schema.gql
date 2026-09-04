@@ -23,8 +23,24 @@ type CategoryModel {
   updatedAt: DateTime!
 }
 
+input ChangeChatSettingsInput {
+  isChatEnabled: Boolean!
+  isChatFollowersOnly: Boolean!
+  isChatPremiumFollowersOnly: Boolean!
+}
+
 input ChangeEmailInput {
   email: String!
+}
+
+input ChangeNotificationSettingsInput {
+  siteNotifications: Boolean!
+  telegramNotifications: Boolean!
+}
+
+type ChangeNotificationSettingsResponse {
+  notificationSettings: NotificationSettingsModel!
+  telegramAuthToken: String
 }
 
 input ChangePasswordInput {
@@ -41,6 +57,17 @@ input ChangeProfileInfoInput {
 input ChangeStreamInfoInput {
   categoryId: String!
   title: String!
+}
+
+type ChatMessageModel {
+  createdAt: DateTime!
+  id: ID!
+  stream: StreamModel
+  streamId: String!
+  text: String!
+  updatedAt: DateTime!
+  user: UserModel
+  userId: String!
 }
 
 input CreateUserInput {
@@ -112,7 +139,9 @@ input LoginInput {
 }
 
 type Mutation {
+  changeChatSettings(data: ChangeChatSettingsInput!): Boolean!
   changeEmail(data: ChangeEmailInput!): Boolean!
+  changeNotificationsSettings(data: ChangeNotificationSettingsInput!): ChangeNotificationSettingsResponse!
   changePassword(data: ChangePasswordInput!): Boolean!
   changeProfileAvatar(avatar: Upload!): Boolean!
   changeProfileInfo(data: ChangeProfileInfoInput!): Boolean!
@@ -136,6 +165,7 @@ type Mutation {
   removeStreamThumbnail: Boolean!
   reorderSocialLinks(list: [SocialLinkOrderInput!]!): Boolean!
   resetPassword(data: ResetPasswordInput!): Boolean!
+  sendMessage(data: SendMessageInput!): ChatMessageModel!
   sendVerificationToken: Boolean!
   unfollowChannel(channelId: String!): Boolean!
   updateSocialLink(data: SocialLinkInput!, id: ID!): Boolean!
@@ -148,25 +178,62 @@ input NewPasswordInput {
   token: String!
 }
 
+type NotificationModel {
+  createdAt: DateTime!
+  id: ID!
+  isRead: Boolean!
+  message: String!
+  type: NotificationType!
+  updatedAt: DateTime!
+  user: UserModel
+  userId: String
+}
+
+type NotificationSettingsModel {
+  createdAt: DateTime!
+  id: ID!
+  siteNotifications: Boolean!
+  telegramNotifications: Boolean!
+  updatedAt: DateTime!
+  user: UserModel
+  userId: String!
+}
+
+enum NotificationType {
+  ENABLE_TWO_FACTOR
+  NEW_FOLLOWER
+  NEW_SPONSORSHIP
+  STREAM_START
+  VERIFIED_CHANNEL
+}
+
 type Query {
   findAllCategories(filters: CategoryFiltersInput): [CategoryModel!]!
   findAllStreams(filters: FiltersInput): [StreamModel!]!
   findCategoryBySlug(slug: String!): CategoryModel!
   findChannelByUsername(username: String!): UserModel!
+  findChatMessagesByStream(streamId: String!): [ChatMessageModel!]!
   findCurrentSession: SessionModel!
   findFollowersCountByChannel(channelId: String!): Int!
   findMyFollowers: [FollowModel!]!
   findMyFollowing: [FollowModel!]!
+  findNotificationsByUser: [NotificationModel!]!
   findProfile: UserModel!
   findRandomCategories: [CategoryModel!]!
   findRandomStreams: [StreamModel!]!
   findRecommendedChannels: [UserModel!]!
   findSessionsByUser: [SessionModel!]!
   findSocialLinks: [SocialLinkModel!]!
+  findUnreadNotificationsCount: Int!
 }
 
 input ResetPasswordInput {
   email: String!
+}
+
+input SendMessageInput {
+  streamId: String!
+  text: String!
 }
 
 type SessionMetadataModel {
@@ -203,10 +270,14 @@ input SocialLinkOrderInput {
 }
 
 type StreamModel {
+  category: CategoryModel!
   categoryId: String
   createdAt: DateTime!
   id: ID!
   ingressId: String
+  isChatEnabled: Boolean!
+  isChatFollowersOnly: Boolean!
+  isChatPremiumFollowersOnly: Boolean!
   isLive: Boolean!
   serverUrl: String
   streamKey: String
@@ -215,6 +286,10 @@ type StreamModel {
   updatedAt: DateTime!
   user: UserModel!
   userId: String!
+}
+
+type Subscription {
+  chatMessageAdded(streamId: String!): ChatMessageModel!
 }
 
 type TotpModel {
@@ -239,6 +314,7 @@ type UserModel {
   isVerified: Boolean!
   socialLinks: [SocialLinkModel!]!
   stream: StreamModel
+  telegramId: String
   updatedAt: DateTime!
   username: String!
 }

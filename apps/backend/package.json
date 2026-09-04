@@ -23,7 +23,7 @@
 		"db:deploy": "prisma migrate deploy",
 		"db:studio": "prisma studio",
 		"db:sync": "prisma migrate dev && prisma generate",
-		"db:seed": "tsx scripts/seed-categories.ts",
+		"db:seed": "tsx src/core/prisma/prisma.seed.ts",
 		"storage:check": "tsx scripts/check-storage.ts"
 	},
 	"dependencies": {
@@ -55,6 +55,7 @@
 		"express-session": "^1.19.0",
 		"geoip-lite": "^2.0.3",
 		"graphql": "^17.0.2",
+		"graphql-subscriptions": "^3.0.0",
 		"graphql-upload-ts": "^2.2.0",
 		"heic-convert": "^2.1.0",
 		"hi-base32": "^0.5.1",
